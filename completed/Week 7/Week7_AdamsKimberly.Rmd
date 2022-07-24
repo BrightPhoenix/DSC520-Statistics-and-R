@@ -1,0 +1,218 @@
+---
+title: "Week 7 Assignment"
+author: "Kimberly Adams"
+date: "2022-07-21"
+output:
+  pdf_document: default
+---
+
+```{r Set path, include=FALSE}
+## Set the working directory to the root of your DSC 520 directory
+setwd("/Users/kimberlyadams/Documents/GitHub/DSC520-Statistics-and-R")
+
+## Load the `data/r4ds/heights.csv` to
+heights_df <- read.csv("data/r4ds/heights.csv")
+```
+
+## Using `cor()` compute correlation coefficients for
+
+### height vs. earn:
+
+```{r Height v Earn, echo=FALSE}
+cor(heights_df$height, heights_df$earn)
+```
+
+### age vs. earn:
+
+```{r Age v Earn, echo=FALSE}
+cor(heights_df$age, heights_df$earn)
+```
+
+### ed vs. earn:
+
+```{r Ed v Earn, echo=FALSE}
+cor(heights_df$ed, heights_df$earn)
+```
+
+## Spurious correlation
+
+### The following is data on US spending on science, space, and technology in millions of today's dollars and Suicides by hanging strangulation and suffocation for the years 1999 to 2009.
+
+### Compute the correlation between these variables:
+
+```{r Spending v Suicides, echo=FALSE}
+tech_spending <- c(18079, 18594, 19753, 20734, 20831, 23029, 23597, 23584, 25525, 27731, 29449)
+suicides <- c(5427, 5688, 6198, 6462, 6635, 7336, 7248, 7491, 8161, 8578, 9000)
+cor(tech_spending, suicides)
+```
+
+This is a VERY strong correlation, but correlation does not imply causation. In this instance, the categorical spending did not necessarily (I won't rule it out as a possibility without further study) cause the population to want to commit suicide. Both values could be increasing for separate reasons (e.g. inflation and increasing social isolation).
+
+## Student Survey
+
+As a data science intern with newly learned knowledge in skills in statistical correlation and R programming, you will analyze the results of a survey recently given to college students. You learn that the research question being investigated is: "Is there a significant relationship between the amount of time spent reading and the time spent watching television?" You are also interested if there are other significant relationships that can be discovered? The survey data is located in this StudentSurvey.csv file.
+
+```{r Student Data Path, include=FALSE}
+## Set the working directory to the root of your DSC 520 directory
+setwd("/Users/kimberlyadams/Documents/GitHub/DSC520-Statistics-and-R")
+
+## Load the Student Survey data
+student_survey_df <- read.csv("data/student-survey.csv")
+colnames(student_survey_df)
+```
+
+## Use R to calculate the covariance of the Survey variables and provide an explanation of why you would use this calculation and what the results indicate.
+
+```{r Student Covariance, echo=FALSE}
+cov(student_survey_df)
+```
+
+Covariance represents the strength and direction of the relationship between two variables. In this data, [TimeReading and TimeTV] and [TimeReading and Happiness] have moderately strong negative relationships (as one increases the other decreases). On the flip side [TimeTV and Happiness] have a very strong positive relationship indicating that the more TV watches is often reflected in greater happiness. Gender had no real definable relationships with any other variable (perhaps a very weak positive relationship with happiness?).
+
+## Examine the Survey data variables.
+
+### What measurement is being used for the variables?
+
+-   TimeReading = interval number of days/hours/minutes(?) reading. Units unclear
+-   TimeTV = interval number of minutes or percentage(?) watching TV in 5 min increments
+-   Happiness = ratio contiguous value (percentage?)
+-   Gender = binary categorical variable (male/female) converted to a number (0/1). Value assignment unknown.
+
+### Explain what effect changing the measurement being used for the variables would have on the covariance calculation.
+
+Changing the unit of measurement could have an impact on covariance if the scale of the values of either variable is altered.
+
+### Would this be a problem?
+
+This is definitely a problem in the current dataset because we are unclear on what the units are for several variables such as TimeReading. It could be the number of hours per day or minutes per week. We do not have any idea without any sort of metadata explaining the measurement units.
+
+### Explain and provide a better alternative if needed.
+
+A way to avoid the issue of units experienced by the covariance calculation is to use the unit-less correlation coefficient. This type of calculation standardizes each variable by dividing the covariance by the standard deviation of the variables thus removing the units. The resulting value falls between -1 and 1.
+
+## Choose the type of correlation test to perform, explain why you chose this test, and make a prediction if the test yields a positive or negative correlation?
+
+### Check for normal distribution of each variable:
+
+```{r QQPlots, echo=FALSE, fig.show="hold", out.width="50%"}
+library(ggplot2)
+qqnorm(student_survey_df$TimeReading, main = "Time Reading")
+qqline(student_survey_df$TimeReading)
+
+qqnorm(student_survey_df$TimeTV, main = "Time TV")
+qqline(student_survey_df$TimeTV)
+
+qqnorm(student_survey_df$Happiness, main = "Happiness")
+qqline(student_survey_df$Happiness)
+
+qqnorm(student_survey_df$Gender, main = "Gender")
+qqline(student_survey_df$Gender)
+```
+
+Looks like, based on all the Q-Q plots, all variables are normally distributed except for Gender.
+
+### Check for outliers:
+
+```{r Boxplots, echo=FALSE, fig.show="hold", out.width="50%"}
+boxplot(student_survey_df$TimeReading, main = "Time Reading")
+boxplot(student_survey_df$TimeTV, main = "Time TV")
+boxplot(student_survey_df$Happiness, main = "Happiness")
+boxplot(student_survey_df$Gender, main = "Gender")
+```
+
+No outliers evident.
+
+### Types of data:
+
+Excluding Gender (binary), all other variables of interest are interval (TimeReading, TimeTV) or ratio (Happiness).
+
+### Test Selection:
+
+The data meets all the assumptions for the Pearson's Test:
+
+* (Assumed random sampling)
+* Normal distributions
+* No Outliers
+* Interval and ratio data (excluding Gender which has already been coded for point-biserial correlation)
+* Predicted linear relationship between variables
+
+### Predictions:
+
+I predict a positive correlation between TV watching and happiness and a negative correlation between TV watching and reading.
+
+## Perform a correlation analysis of:
+
+### All variables:
+
+```{r Pearson All, echo=FALSE}
+cor(student_survey_df, method = "pearson") 
+```
+
+### Time Watching TV and Time Reading:
+
+```{r Pearson TV v Reading, echo=FALSE}
+cor(student_survey_df$TimeTV, student_survey_df$TimeReading, method = "pearson") 
+```
+
+## Repeat your correlation test in step 2 but set the confidence interval at 99%
+
+```{r Pearson TV v Reading 99, echo=FALSE}
+cor.test(student_survey_df$TimeTV, student_survey_df$TimeReading, method = "pearson",conf.level = 0.99, exact = FALSE) 
+```
+
+### Describe what the calculations in the correlation matrix suggest about the relationship between the variables. Be specific with your explanation.
+
+The test returned a correlation value of -.88 between TV watching and Reading. As this value is below 0, it means there is negative linear correlation (one variable decreases as the other increases) and because it is closer to the lower limit (limit = -1), this is a very strong negative linear relationship between the variables.  The relationship is also statistically significant at a 99% confidence interval (p = .0003).
+
+The test returned a correlation value of .64 between TV watching and Happiness. As this value is above 0, it means there is positive linear correlation (both variables increase) and because it is closer to the upper limit (limit = 1), this is a strong positive linear relationship between the variables.
+
+The test returned a correlation value of -.43 between TimeReading and Happiness. As this value is below 0, it means there is negative linear correlation (one variable decreases as the other increases) and because it is halfway to the lower limit (limit = -1), this is a moderately strong negative linear relationship between the variables.
+
+The test returned a correlation value of -.09 between Gender and TimeReading. There basically no relationship between the variables.
+
+The test returned a correlation value of .01 between Gender and TimeTV. There is basically no relationship between the variables.
+
+The test returned a correlation value of .156 between Gender and Happiness. There is a slight  linear relationship between the variables.
+
+
+
+### Calculate the correlation coefficient and the coefficient of determination, describe what you conclude about the results.
+
+The correlation coefficient has already been calculated to be equal to -.88 between Time TV watching and Time Reading. This indicates a strong negative linear relationship between the two variables.
+
+The coefficient of determination is equal to:
+
+```{r linear model stats, echo=FALSE}
+TV.lm = lm(TimeReading ~ TimeTV, data = student_survey_df)
+# summary(TV.lm)
+summary(TV.lm)$r.squared
+```
+
+This indicates that the data points fall very close to the line of best fit, meaning that a linear model can predict it fairly well, but not perfectly as is reinforced by this graph of the data:
+
+```{r linear model graph, echo=FALSE, fig.align='center', out.width="50%"}
+library(ggplot2)
+ggplot(student_survey_df, aes(x = TimeTV, y = TimeReading)) + geom_point() + xlab('TimeTV') + ylab('TimeReading') + geom_smooth(method='lm')
+```
+
+Notice that a few of the points are outside even the gray shaded area showing that the linear model isn't perfect in its prediction.  The model can roughly explain 78% of the data, but leaves 22% unaccounted for.
+
+
+### Based on your analysis can you say that watching more TV caused students to read less? Explain.
+
+Although there is a strong negative relationship between the two variables (-0.88), we can never directly say what causes something else to happen using correlation.  We can only say that watching more TV is strongly associated with reading less.  The actual cause may be something else such as limited amounts of time available or not having found a book that week that the student wants to read - perhaps the student might have binge-read several books the previous week and was taking a break.  In some cases, the two activities could be done simultaneously.  I have both watched TV and read a book at the same time.
+
+Once again, the saying "Correlation does not imply causation" reminds us that even though there is a certain type of trend between two variables, that does not mean that the value of one directly caused or influenced the value of the other.  The two variables could be reflecting a third unknown factor or just by chance follow a certain trend.
+
+## Pick three variables and perform a partial correlation, documenting which variable you are "controlling".
+
+Looking at the correlation of TimeTV and TimeReading, controlling for Happiness:
+```{r Partial Correlation, echo = FALSE}
+library(ppcor)
+pcor.test(student_survey_df$TimeTV, student_survey_df$TimeReading, student_survey_df$Happiness)
+```
+
+
+### Explain how this changes your interpretation and explanation of the results.
+
+The partial correlation value is still roughly -.88 so the initial analysis doesn't change. There is still a strong negative linear relationship between TimeTV and TimeReading and the strength of that relationship does not change even when controlling for Happiness value. This means that Happiness does not influence the direct relationship between TimeTV and TimeReading. The relationship is still statistically significant at a 99% confidence interval (p = .001).
