@@ -1,0 +1,133 @@
+---
+title: "Assignment 9.2"
+author: "Kimberly Adams"
+date: 08/7/2022
+output:
+  pdf_document: default
+---
+
+# Fit a Logistic Regression Model to Thoracic Surgery Binary Dataset
+
+For this problem, you will be working with the thoracic surgery data set from the University of California Irvine machine learning repository. This dataset contains information on life expectancy in lung cancer patients after surgery.
+
+The underlying thoracic surgery data is in ARFF format. This is a text-based format with information on each of the attributes. You can load this data using a package such as foreign or by cutting and pasting the data section into a CSV file.
+
+```{r Load data, include=FALSE}
+## Set the working directory to the root of your DSC 520 directory
+setwd("/Users/kimberlyadams/Documents/GitHub/DSC520-Statistics-and-R")
+
+## Prevent scientific notation
+options(scipen = 999)
+
+## Import dataset
+library(foreign)
+thoractic.df <- read.arff("data/ThoraricSurgery.arff")
+
+# Change Categorical variables into numeric
+thoracticLogical.df <- sapply(thoractic.df, as.logical)
+thoracticNum.df <- thoracticLogical.df * 1
+thoracticBinary.df <- as.data.frame(thoracticNum.df)
+
+# Re-establishing non-binary values from original dataset:
+thoracticBinary.df$DGN <- thoractic.df$DGN
+thoracticBinary.df$PRE4 <- thoractic.df$PRE4
+thoracticBinary.df$PRE5 <- thoractic.df$PRE5
+thoracticBinary.df$PRE6 <- thoractic.df$PRE6
+thoracticBinary.df$PRE14 <- thoractic.df$PRE14
+thoracticBinary.df$AGE <- thoractic.df$AGE
+```
+0 = False
+1 = True
+
+Variables Definitions (for reference):
+
+1. DGN: Diagnosis - specific combination of ICD-10 codes for primary and secondary as well multiple tumours if any (DGN3,DGN2,DGN4,DGN6,DGN5,DGN8,DGN1) 
+2. PRE4: Forced vital capacity - FVC (numeric) 
+3. PRE5: Volume that has been exhaled at the end of the first second of forced expiration - FEV1 (numeric) 
+4. PRE6: Performance status - Zubrod scale (PRZ2,PRZ1,PRZ0) 
+5. PRE7: Pain before surgery (T,F) 
+6. PRE8: Haemoptysis before surgery (T,F) 
+7. PRE9: Dyspnoea before surgery (T,F) 
+8. PRE10: Cough before surgery (T,F) 
+9. PRE11: Weakness before surgery (T,F) 
+10. PRE14: T in clinical TNM - size of the original tumour, from OC11 (smallest) to OC14 (largest) (OC11,OC14,OC12,OC13) 
+11. PRE17: Type 2 DM - diabetes mellitus (T,F) 
+12. PRE19: MI up to 6 months (T,F) 
+13. PRE25: PAD - peripheral arterial diseases (T,F) 
+14. PRE30: Smoking (T,F) 
+15. PRE32: Asthma (T,F) 
+16. AGE: Age at surgery (numeric) 
+17. Risk1Yr: 1 year survival period - (T)rue value if died (T,F)
+
+
+## Assignment Instructions:
+
+1.  Fit a binary logistic regression model to the data set that predicts whether or not the patient survived for one year (the Risk1Y variable) after the surgery. Use the glm() function to perform the logistic regression. See Generalized Linear Models for an example. Include a summary using the summary() function in your results.
+
+```{r logistic regression, echo = FALSE}
+# Split data into train and test subsets 
+library(caTools)
+Split <-sample.split(thoracticBinary.df, SplitRatio = 0.8)
+train <- subset(thoracticBinary.df, split = "TRUE")
+test <- subset(thoracticBinary.df, split = "FALSE")
+
+# Munge the data
+thoracticBinary.df <- sapply(thoracticBinary.df, as.factor)
+
+# Run the regression (I picked only two variables: Smoking and Pain before surgery)
+Thoracic.LogReg <- glm(Risk1Yr ~  PRE30 + PRE7, data = train, family = 'binomial')
+summary(Thoracic.LogReg)
+```
+
+### 2.  According to the summary, which variables had the greatest effect on the survival rate?
+
+Of the variables tried, PRE30 (Smoking) had the highest correlation coefficient of 0.81 followed by PRE7 (Pain before surgery, 0.64). Smoking is significant at a 90% confidence level.
+
+### 3.  To compute the accuracy of your model, use the dataset to predict the outcome variable. The percent of correct predictions is the accuracy of your model. What is the accuracy of your model?
+
+```{r predictions, echo = FALSE}
+res <- predict(Thoracic.LogReg, test, type = "response")
+res <- predict(Thoracic.LogReg, train, type = "response")
+
+confmatrix <- table(Actual_Value = train$Risk1Yr, Predicted_value = res >0.5)
+confmatrix
+```
+
+According to the confusion matrix, the model predicts that everyone would die, but there are 70 cases in which the patient actually lived.  This means that the accuracy is 400/470 = 85%.  Although this value is high, I personally have some significant doubts on this model due to the fact that it did not predict even 1 survival case. More study is needed.
+
+# Fit a logistic regression model to the binary-classifier-data.csv dataset. 
+
+### The dataset (found in binary-classifier-data.csv) contains three variables; label, x, and y. The label variable is either 0 or 1 and is the output we want to predict using the x and y variables. What is the accuracy of the logistic regression classifier?
+
+```{r Binary Classifier data, echo = FALSE}
+## Import dataset
+BinClass.df <- read.csv("/Users/kimberlyadams/Documents/GitHub/DSC520-Statistics-and-R/data/binary-classifier-data.csv")
+
+# Split data into train and test subsets 
+library(caTools)
+Split <-sample.split(BinClass.df, SplitRatio = 0.8)
+train <- subset(BinClass.df, split = "TRUE")
+test <- subset(BinClass.df, split = "FALSE")
+
+# Munge the data
+BinClass.df$label <- as.factor(BinClass.df$label)
+BinClass.df$x <- as.numeric(BinClass.df$x)
+BinClass.df$y <- as.numeric(BinClass.df$y)
+
+BinClass.df <- as.data.frame(BinClass.df)
+
+# Run the regression
+BinClass.logReg <- glm(label ~  x + y, data = BinClass.df, family = 'binomial')
+summary(BinClass.logReg)
+
+res <- predict(BinClass.logReg, test, type = "response")
+res <- predict(BinClass.logReg, train, type = "response")
+
+confmatrix <- table(Actual_Value = train$label, Predicted_value = res >0.5)
+confmatrix
+
+# Accuracy
+(confmatrix[[1,1]] + confmatrix[[2,2]]) / sum(confmatrix)
+```
+
+The results show that this model is only about 58% accurate.
