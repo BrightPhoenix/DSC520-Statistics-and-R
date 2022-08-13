@@ -1,0 +1,304 @@
+---
+title: "Week10_Assignment10-2_KimberlyAdams"
+author: "Kimberly Adams"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r Setup workspace, include=FALSE}
+## Prevent scientific notation
+options(scipen = 999)
+```
+
+# Introduction to Machine Learning
+## Classification
+
+```{r Import data, include=FALSE}
+## Set the working directory
+setwd("/Users/kimberlyadams/Documents/GitHub/DSC520-Statistics-and-R/")
+
+## Label = 0 or 1
+binary.df <- read.csv('data/binary-classifier-data.csv')
+str(binary.df)
+
+# Label = 0, 1, or 2
+trinary.df <- read.csv('data/trinary-classifier-data.csv')
+str(trinary.df)
+```
+
+
+Plot the data from each dataset using a scatter plot.
+
+```{r Scatterplots, echo = FALSE}
+library(ggplot2)
+
+ggplot(binary.df, aes(x = x, y = y, col = label)) + geom_point() + ggtitle("Binary")
+
+ggplot(trinary.df, aes(x = x, y = y, col = label)) + geom_point() + ggtitle("Trinary")
+```
+
+## K Nearest Neightbor Algorithm
+For this problem, you will focus on a single metric, accuracy. Accuracy is simply the percentage of how often the model predicts the correct result. If the model always predicts the correct result, it is 100% accurate. If the model always predicts the incorrect result, it is 0% accurate.
+
+```{r Nearest Neighbor binary, echo = FALSE, out.width="50%", results = FALSE, warning = FALSE, message = FALSE}
+# Fit a k nearest neighbors’ model for k=3, k=5, k=10, k=15, k=20, and k=25. 
+
+library(class)
+
+# Normalization
+normalize <- function(x) {return ((x - min(x)) / (max(x) - min(x))) }
+binaryNorm.df <- as.data.frame(lapply(binary.df, normalize))
+
+# Split data into train and test subsets 
+library(caTools)
+
+set.seed(123)
+dat.d <- sample(1:nrow(binaryNorm.df), size = nrow(binaryNorm.df) * 0.7, replace = FALSE) #random selection of 70% data.
+ 
+trainBinary.df <- binary.df[dat.d,] # 70% training data
+testBinary.df <- binary.df[-dat.d,] # remaining 30% test data
+
+
+# Run Nearest Neighbor
+knn.3 <- knn(train = trainBinary.df, test = testBinary.df, cl = trainBinary.df$label, k = 3)
+
+knn.5 <- knn(train = trainBinary.df, test = testBinary.df, cl = trainBinary.df$label, k = 5)
+
+knn.10 <- knn(train = trainBinary.df, test = testBinary.df, cl = trainBinary.df$label, k = 10)
+
+knn.15 <- knn(train = trainBinary.df, test = testBinary.df, cl = trainBinary.df$label, k = 15)
+
+knn.20 <- knn(train = trainBinary.df, test = testBinary.df, cl = trainBinary.df$label, k = 20)
+
+knn.25 <- knn(train = trainBinary.df, test = testBinary.df, cl = trainBinary.df$label, k = 25)
+
+
+# Compute the accuracy of the resulting models for each value of k. 
+library(caret)
+
+acc3 <- 100 * sum(testBinary.df$label == knn.3) / NROW(testBinary.df$label)
+acc3
+table(knn.3 ,testBinary.df$label)
+### confusionMatrix(table(knn.3 ,testBinary.df$label))
+
+acc5 <- 100 * sum(testBinary.df$label == knn.5) / NROW(testBinary.df$label)
+acc5
+table(knn.5 ,testBinary.df$label)
+
+acc10 <- 100 * sum(testBinary.df$label == knn.10) / NROW(testBinary.df$label)
+acc10
+table(knn.10 ,testBinary.df$label)
+
+acc15 <- 100 * sum(testBinary.df$label == knn.15) / NROW(testBinary.df$label)
+acc15
+table(knn.15 ,testBinary.df$label)
+
+acc20 <- 100 * sum(testBinary.df$label == knn.20) / NROW(testBinary.df$label)
+acc20
+table(knn.20 ,testBinary.df$label)
+
+acc25 <- 100 * sum(testBinary.df$label == knn.25) / NROW(testBinary.df$label)
+acc25
+table(knn.25 ,testBinary.df$label)
+
+# Plot the results in a graph where the x-axis is the different values of k and the y-axis is the accuracy of the model.
+
+knn <- c(3, 5, 10, 15, 20, 25)
+accuracy <- c(acc3, acc5, acc10, acc15, acc20, acc25)
+knnData <- data.frame(knn, accuracy)
+
+library(ggplot2)
+
+ggplot(knnData, aes(x = knn, y = accuracy)) + geom_point() + ggtitle("Binary")
+```
+
+```{r Nearest Neighbor trinary, echo = FALSE, out.width="50%", results = FALSE, warning = FALSE, message = FALSE}
+# Fit a k nearest neighbors’ model for k=3, k=5, k=10, k=15, k=20, and k=25. 
+
+library(class)
+
+# Normalization
+normalize <- function(x) {return ((x - min(x)) / (max(x) - min(x))) }
+trinaryNorm.df <- as.data.frame(lapply(trinary.df, normalize))
+
+# Split data into train and test subsets 
+library(caTools)
+
+set.seed(123)
+dat.d <- sample(1:nrow(trinaryNorm.df), size = nrow(trinaryNorm.df) * 0.7, replace = FALSE) #random selection of 70% data.
+ 
+trainTrinary.df <- trinary.df[dat.d,] # 70% training data
+testTrinary.df <- trinary.df[-dat.d,] # remaining 30% test data
+
+
+# Run Nearest Neighbor
+knn.3 <- knn(train = trainTrinary.df, test = testTrinary.df, cl = trainTrinary.df$label, k = 3)
+
+knn.5 <- knn(train = trainTrinary.df, test = testTrinary.df, cl = trainTrinary.df$label, k = 5)
+
+knn.10 <- knn(train = trainTrinary.df, test = testTrinary.df, cl = trainTrinary.df$label, k = 10)
+
+knn.15 <- knn(train = trainTrinary.df, test = testTrinary.df, cl = trainTrinary.df$label, k = 15)
+
+knn.20 <- knn(train = trainTrinary.df, test = testTrinary.df, cl = trainTrinary.df$label, k = 20)
+
+knn.25 <- knn(train = trainTrinary.df, test = testTrinary.df, cl = trainTrinary.df$label, k = 25)
+
+
+# Compute the accuracy of the resulting models for each value of k. 
+library(caret)
+
+acc3 <- 100 * sum(testTrinary.df$label == knn.3) / NROW(testBinary.df$label)
+acc3
+table(knn.5 ,testTrinary.df$label)
+
+acc5 <- 100 * sum(testTrinary.df$label == knn.5) / NROW(testTrinary.df$label)
+acc5
+table(knn.5 ,testTrinary.df$label)
+
+acc10 <- 100 * sum(testTrinary.df$label == knn.10) / NROW(testTrinary.df$label)
+acc10
+table(knn.10 ,testTrinary.df$label)
+
+acc15 <- 100 * sum(testTrinary.df$label == knn.15) / NROW(testTrinary.df$label)
+acc15
+table(knn.15 ,testTrinary.df$label)
+
+acc20 <- 100 * sum(testTrinary.df$label == knn.20) / NROW(testTrinary.df$label)
+acc20
+table(knn.20 ,testTrinary.df$label)
+
+acc25 <- 100 * sum(testTrinary.df$label == knn.25) / NROW(testTrinary.df$label)
+acc25
+table(knn.25 ,testTrinary.df$label)
+
+# Plot the results in a graph where the x-axis is the different values of k and the y-axis is the accuracy of the model.
+
+knn <- c(3, 5, 10, 15, 20, 25)
+accuracy <- c(acc3, acc5, acc10, acc15, acc20, acc25)
+knnData <- data.frame(knn, accuracy)
+
+library(ggplot2)
+
+ggplot(knnData, aes(x = knn, y = accuracy)) + geom_point() + ggtitle("Trinary")
+```
+
+## Looking back at the plots of the data, do you think a linear classifier would work well on these datasets?
+
+No, I don't think a linear classifier would work well for this this data as the groups are clumped or clusters into balls throughout the plot rather than on one side or the other.
+
+## How does the accuracy of your logistic regression classifier from last week compare?  Why is the accuracy different between these two methods?
+
+```{r Binary Classifier data linear model, echo = FALSE}
+library(class)
+
+# Normalization
+normalize <- function(x) {return ((x - min(x)) / (max(x) - min(x))) }
+binaryNorm.df <- as.data.frame(lapply(binary.df, normalize))
+
+# Split data into train and test subsets 
+library(caTools)
+
+set.seed(123)
+dat.d <- sample(1:nrow(binaryNorm.df), size = nrow(binaryNorm.df) * 0.7, replace = FALSE) #random selection of 70% data.
+ 
+trainBinary.df <- binary.df[dat.d,] # 70% training data
+testBinary.df <- binary.df[-dat.d,] # remaining 30% test data
+
+# Run the regression
+binary.logReg <- glm(label ~  x + y, data = binary.df, family = 'binomial')
+
+res <- predict(binary.logReg, testBinary.df, type = "response")
+res <- predict(binary.logReg, trainBinary.df, type = "response")
+
+confmatrix <- table(Actual_Value = trainBinary.df$label, Predicted_value = res >0.5)
+confmatrix
+
+(confmatrix[[1,1]] + confmatrix[[2,2]]) / sum(confmatrix)
+```
+
+The accuracy of the lineal classifier model is roughly 57% which is much worse than the greater than 90% accuracy of the K nearest neighbor modeling (depending on k size). Again it makes sense because you cannot draw a single line through the data to either define all of it or divide it into the two groups since the groups are scattered all throughout the plot.
+
+## Clustering
+Labeled data is not always available. For these types of datasets, you can use unsupervised algorithms to extract structure. 
+
+The k-means clustering algorithm and the k nearest neighbor algorithm both use the Euclidean distance between points to group data points. The difference is the k-means clustering algorithm does not use labeled data.
+
+In this problem, you will use the k-means clustering algorithm to look for patterns in an unlabeled dataset. The dataset for this problem is found at data/clustering-data.csv.
+
+### Plot the dataset using a scatter plot.
+```{r Clustering, echo = FALSE}
+clusterData.df <- read.csv("/Users/kimberlyadams/Documents/GitHub/DSC520-Statistics-and-R/data/clustering-data.csv")
+str(clusterData.df)
+
+library(ggplot2)
+ggplot(clusterData.df, aes(x = x, y = y)) + geom_point() + ggtitle("Clustering Data Preview")
+```
+
+### Fit the dataset using the k-means algorithm from k=2 to k=12. Create a scatter plot of the resultant clusters for each value of k.
+
+```{r k-means, echo = FALSE, message = FALSE, fig.show="hold", out.width="50%"}
+library(factoextra)
+library(cluster)
+
+k2 <- kmeans(clusterData.df, 2, nstart = 25)
+fviz_cluster(k2, data = clusterData.df, geom = "point")
+
+k3 <- kmeans(clusterData.df, 3, nstart = 25)
+fviz_cluster(k3, data = clusterData.df, geom = "point")
+
+k4 <- kmeans(clusterData.df, 4, nstart = 25)
+fviz_cluster(k4, data = clusterData.df, geom = "point")
+
+k5 <- kmeans(clusterData.df, 5, nstart = 25)
+fviz_cluster(k5, data = clusterData.df, geom = "point")
+
+k6 <- kmeans(clusterData.df, 6, nstart = 25)
+fviz_cluster(k6, data = clusterData.df, geom = "point")
+
+k7 <- kmeans(clusterData.df, 7, nstart = 25)
+fviz_cluster(k7, data = clusterData.df, geom = "point")
+
+k8 <- kmeans(clusterData.df, 8, nstart = 25)
+fviz_cluster(k8, data = clusterData.df, geom = "point")
+
+k9 <- kmeans(clusterData.df, 9, nstart = 25)
+fviz_cluster(k9, data = clusterData.df, geom = "point")
+
+k10 <- kmeans(clusterData.df, 10, nstart = 25)
+fviz_cluster(k10, data = clusterData.df, geom = "point")
+
+k11 <- kmeans(clusterData.df, 11, nstart = 25)
+fviz_cluster(k11, data = clusterData.df, geom = "point")
+
+k12 <- kmeans(clusterData.df, 12, nstart = 25)
+fviz_cluster(k12, data = clusterData.df, geom = "point")
+```
+
+### Calculate this average distance from the center of each cluster for each value of k and plot it as a line chart where k is the x-axis and the average distance is the y-axis.
+
+```{r K Means Distances, echo = FALSE}
+k2distances <- mean(sqrt(rowSums((clusterData.df - fitted(k2))^ 2)))
+k3distances <- mean(sqrt(rowSums((clusterData.df - fitted(k3))^ 2)))
+k4distances <- mean(sqrt(rowSums((clusterData.df - fitted(k4))^ 2)))
+k5distances <- mean(sqrt(rowSums((clusterData.df - fitted(k5))^ 2)))
+k6distances <- mean(sqrt(rowSums((clusterData.df - fitted(k6))^ 2)))
+k7distances <- mean(sqrt(rowSums((clusterData.df - fitted(k7))^ 2)))
+k8distances <- mean(sqrt(rowSums((clusterData.df - fitted(k8))^ 2)))
+k9distances <- mean(sqrt(rowSums((clusterData.df - fitted(k9))^ 2)))
+k10distances <- mean(sqrt(rowSums((clusterData.df - fitted(k10))^ 2)))
+k11distances <- mean(sqrt(rowSums((clusterData.df - fitted(k11))^ 2)))
+k12distances <- mean(sqrt(rowSums((clusterData.df - fitted(k12))^ 2)))
+
+kmeans <- 2:12
+AvgDistances <- c(k2distances, k3distances, k4distances, k5distances, k6distances, k7distances, k8distances, k9distances, k10distances, k11distances, k12distances)
+kmeansGraph <- data.frame(kmeans, AvgDistances)
+
+library(ggplot2)
+
+ggplot(kmeansGraph, aes(x = kmeans, y = AvgDistances)) + geom_line() + xlab("K") + ylab("Average Point Distance from Cluster Centroid") + scale_x_continuous(breaks = seq(2, 12, by = 2))
+```
+
+### Looking at the graph you generated in the previous example, what is the elbow point for this dataset?
+
+Eyeballing the graph seems to indicate that once you get to k=10, the amount gained by adding more clusters is almost nothing so I would call that the max elbow point.  However, I could also see merit to calling k=6 the elbow point if adding more clusters is going to put extra challenges on data computations.  I think it depends on what you are going for and how accurate you want/can be.  Essentially you are comparing the slopes and determining your own criteria for how much further change is not worth it based on your data.
